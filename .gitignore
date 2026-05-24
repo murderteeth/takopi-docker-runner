@@ -1,0 +1,4 @@
+home/
+workspace/*
+!workspace/.gitkeep
+.env

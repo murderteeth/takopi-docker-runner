@@ -1,0 +1,18 @@
+name: takopi-docker-runner
+
+services:
+  takopi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: takopi-docker-runner:latest
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    volumes:
+      - ../home:/home/takopi
+      - ../workspace:/workspace
+    environment:
+      HOME: /home/takopi
+      TERM: xterm-256color
+    command: takopi
