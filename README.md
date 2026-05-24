@@ -56,6 +56,23 @@ Start Takopi in the background:
 docker compose -f docker/compose.yml up -d takopi
 ```
 
+Open an interactive shell in the running background container:
+
+```sh
+docker compose -f docker/compose.yml exec takopi bash
+```
+
+Use this to log in to agent CLIs or rerun Takopi onboarding against the
+persistent `/home/takopi` state:
+
+```sh
+codex
+claude
+opencode
+pi
+takopi
+```
+
 View logs:
 
 ```sh
