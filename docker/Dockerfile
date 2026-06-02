@@ -15,6 +15,7 @@ RUN apt-get update \
         curl \
         gh \
         git \
+        nano \
         openssh-client \
         ripgrep \
         tini \
