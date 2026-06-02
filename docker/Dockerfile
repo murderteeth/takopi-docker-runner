@@ -21,6 +21,9 @@ RUN apt-get update \
         tini \
     && rm -rf /var/lib/apt/lists/*
 
+RUN corepack enable \
+    && corepack prepare pnpm@11.3.0 --activate
+
 RUN groupmod --new-name takopi node \
     && usermod --login takopi --home /home/takopi --move-home --shell /bin/bash node \
     && mkdir -p /workspace /opt/uv/python /opt/uv/tools \
