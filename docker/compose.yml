@@ -5,7 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
     image: takopi-docker-runner:latest
+    network_mode: host
     stdin_open: true
     tty: true
     working_dir: /workspace
@@ -15,4 +17,7 @@ services:
     environment:
       HOME: /home/takopi
       TERM: xterm-256color
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     command: takopi
