@@ -7,7 +7,9 @@ services:
       dockerfile: Dockerfile
       network: host
     image: takopi-docker-runner:latest
-    restart: unless-stopped
+    # Build-only: live bots run from sibling instance repos (see README).
+    # This service exists for building the base image and ad-hoc shells.
+    restart: "no"
     network_mode: host
     stdin_open: true
     tty: true

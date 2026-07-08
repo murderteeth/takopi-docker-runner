@@ -1,15 +1,28 @@
 # Takopi Docker Runner
 
-Docker-based runtime for using released Takopi without tying runtime state to the Takopi source checkout.
+Generic base image for Telegram t-bots built on released
+[Takopi](https://github.com/banteg/takopi): node + python toolchains, the
+agent CLIs (codex, claude, opencode, pi), and a compose service definition.
 
-This repository versions only the image, Compose config, documentation, and examples. Local runtime state is private and persistent in `home/`; checked-out projects or working files belong in `workspace/`.
+**This repo is build-only.** No bot runs from this checkout. Each live bot is
+a sibling *instance repo* that overlays this image with its own Dockerfile,
+compose project, and private `home/` / `workspace/` state:
+
+- [../safe-review-bot](../safe-review-bot) — signing reviews for the yearn
+  strategist multisigs
+- [../section9-bot](../section9-bot) — the Section9 bot (glasswing)
+
+To create a new bot, use the **create-t-bot** skill in this repo
+(`.claude/skills/create-t-bot`, also linked for codex) — it scaffolds an
+instance repo and walks through Telegram/bootstrap setup.
 
 ## Layout
 
-- `docker/` - Dockerfile and Compose service.
-- `home/` - ignored persistent container home. Takopi config, Telegram state, and agent CLI auth live here.
-- `workspace/` - ignored workspace for target repos or files mounted at `/workspace`.
-- `.env.example` - placeholder for optional future local knobs. Do not store secrets in git.
+- `docker/` — Dockerfile and the build-only compose service.
+- `home/`, `workspace/` — empty placeholders. Instance repos have the real
+  ones; nothing stateful belongs in this checkout.
+- `.env.example` — placeholder for optional future local knobs. Do not store
+  secrets in git.
 
 ## Build
 
@@ -17,95 +30,32 @@ This repository versions only the image, Compose config, documentation, and exam
 docker compose -f docker/compose.yml build
 ```
 
-## First Setup
+Instance images build `FROM takopi-docker-runner:latest`, so build this one
+first.
 
-Open an interactive shell:
+## Upgrade
+
+Rebuild to pick up the latest released Takopi and agent CLIs, then rebuild
+each instance image and restart its container:
+
+```sh
+docker compose -f docker/compose.yml build --pull --no-cache
+# then, per instance repo:
+#   docker compose -f docker/compose.yml build && docker compose -f docker/compose.yml up -d
+```
+
+## Ad-hoc shell
 
 ```sh
 docker compose -f docker/compose.yml run --rm takopi bash
 ```
 
-Inside the container, log in to whichever agent CLIs you want to use:
+Useful for poking at the base image (`takopi --version`, `takopi doctor`).
+Don't run takopi onboarding or agent logins here — that state belongs in an
+instance repo's `home/`.
 
-```sh
-codex
-claude
-opencode
-pi
-```
+## History
 
-Then run Takopi onboarding:
-
-```sh
-takopi
-```
-
-The wizard writes config to `/home/takopi/.takopi/takopi.toml`, which persists in local `home/` along with Telegram state and CLI auth.
-
-## Run
-
-Start Takopi in the foreground:
-
-```sh
-docker compose -f docker/compose.yml up takopi
-```
-
-Start Takopi in the background:
-
-```sh
-docker compose -f docker/compose.yml up -d takopi
-```
-
-Open an interactive shell in the running background container:
-
-```sh
-docker compose -f docker/compose.yml exec takopi bash
-```
-
-Use this to log in to agent CLIs or rerun Takopi onboarding against the
-persistent `/home/takopi` state:
-
-```sh
-codex
-claude
-opencode
-pi
-takopi
-```
-
-View logs:
-
-```sh
-docker compose -f docker/compose.yml logs -f takopi
-```
-
-## Stop
-
-Stop the service:
-
-```sh
-docker compose -f docker/compose.yml stop takopi
-```
-
-Stop and remove the container:
-
-```sh
-docker compose -f docker/compose.yml down
-```
-
-## Upgrade
-
-Rebuild the image to pick up the latest released Takopi and agent CLIs:
-
-```sh
-docker compose -f docker/compose.yml build --pull --no-cache
-docker compose -f docker/compose.yml up -d takopi
-```
-
-## Useful Checks
-
-```sh
-docker compose -f docker/compose.yml run --rm takopi takopi --version
-docker compose -f docker/compose.yml run --rm takopi takopi doctor
-docker compose -f docker/compose.yml run --rm takopi takopi config list
-```
+Until 2026-07-07 the Section9 bot ran directly from this checkout's untracked
+`home/` and `workspace/`. That deployment now lives in
+[../section9-bot](../section9-bot).
