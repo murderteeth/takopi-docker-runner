@@ -54,6 +54,20 @@ Useful for poking at the base image (`takopi --version`, `takopi doctor`).
 Don't run takopi onboarding or agent logins here — that state belongs in an
 instance repo's `home/`.
 
+## Cron
+
+The base image starts Debian cron alongside the main process. Install a user
+crontab from an instance repo with `crontab -e` or `crontab file`; jobs run as
+the unprivileged `takopi` user. Redirect job output to the container's standard
+streams when it should appear in Docker logs:
+
+```cron
+*/5 * * * * /workspace/path/to/job >> /proc/1/fd/1 2>> /proc/1/fd/2
+```
+
+Use `flock` for jobs that must not overlap. Cron's recommended mail transport
+package is intentionally omitted.
+
 ## History
 
 Until 2026-07-07 the Section9 bot ran directly from this checkout's untracked

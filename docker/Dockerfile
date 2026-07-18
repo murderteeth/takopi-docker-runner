@@ -12,14 +12,18 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
         ca-certificates \
+        cron \
         curl \
         gh \
         git \
         nano \
         openssh-client \
         ripgrep \
+        sudo \
         tini \
     && rm -rf /var/lib/apt/lists/*
+
+COPY entrypoint.sh /usr/local/bin/takopi-entrypoint
 
 RUN corepack enable \
     && corepack prepare pnpm@11.3.0 --activate
@@ -27,7 +31,10 @@ RUN corepack enable \
 RUN groupmod --new-name takopi node \
     && usermod --login takopi --home /home/takopi --move-home --shell /bin/bash node \
     && mkdir -p /workspace /opt/uv/python /opt/uv/tools \
-    && chown -R takopi:takopi /workspace /opt/uv
+    && chown -R takopi:takopi /workspace /opt/uv \
+    && chmod 0755 /usr/local/bin/takopi-entrypoint \
+    && printf 'takopi ALL=(root) NOPASSWD: /usr/sbin/cron -f\n' > /etc/sudoers.d/takopi-cron \
+    && chmod 0440 /etc/sudoers.d/takopi-cron
 
 RUN uv python install 3.14 \
     && uv tool install --python 3.14 takopi \
@@ -41,5 +48,5 @@ RUN uv python install 3.14 \
 USER takopi
 WORKDIR /workspace
 
-ENTRYPOINT ["tini", "--"]
+ENTRYPOINT ["tini", "--", "/usr/local/bin/takopi-entrypoint"]
 CMD ["takopi"]
